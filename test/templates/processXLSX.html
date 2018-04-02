@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+   <title>jQuery UI Tabs - Default functionality</title>
+  <link rel=stylesheet type="text/css" href="{{ url_for('static', filename='js/jquery/jquery-ui.min.css') }}">
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery/external/jquery/jquery.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery/jquery-ui.min.js') }}"></script>
+
+
+  <script>
+  $( function() {
+    $( "#tabs" ).tabs();
+  } );
+  </script>
+  
+  <script>
+  $( function() {
+    $( "#sortable" ).sortable();
+    $( "#sortable" ).disableSelection();
+  } );
+  </script>
+  
+</head>
+<body>
+<div id="tabs">
+ 	<ul>
+	{% for sheet in session['sheetList']%}
+	    <li><a name="sheet" href="#tab-{{sheet['seq']}}">{{sheet['sheetName']}}</a></li>
+	{% endfor %}
+  	</ul>
+  	<input name="allCheck"  type="button" value='全部選擇' onclick="sheetAllCheck(this)">
+	<input name="allCancel" type="button" value='全部取消' style='margin-left:20px;'><br>
+	
+ 	{% for sheet in session['sheetList'] %}
+  	<div id="tab-{{sheet['seq']}}">
+		{% if sheet['item'] %}
+		<input name="sheetCheck"  type="button" value='此sheet全部選擇' onclick="sheetAllCheck(this,{{sheet['seq']}})">
+		<input name="sheetCancel" type="button" value='此sheet全部取消' onclick="sheetAllCancel(this,{{sheet['seq']}})" style='margin-left:20px;'><br>
+	  		<div id="sheetPanel-{{sheet['seq']}}">
+	  		<ul id="sortable">
+	  		{%for item in sheet['item'] %}
+	  			<li class="ui-state-default">
+	  				<input name="checkItem" type="checkbox" value="{{item['value']}}" style='margin-left:10px;' checked><span style="color:blue;" >測試名稱:</span>{{item['value']}}
+	  				<span style="color:blue;display:none;" >描述:</span><span style="display:none;">{{item['description']}}</span>
+	  				<input type="text" value="" name="dependItem" placeholder="設定前置動作" style="display:none">
+	  				<input name="ItemDetail" type="button" value="詳細資料" >
+	  				<table style="display:none">
+	  				{%for cell in item['parameterList'] %}
+	  					<tr><td>{{cell['name']}}</td><td>{{cell['value']}}</td></tr>
+	  				{% endfor %}
+	  				</table>
+  				</li>
+	  		{% endfor %}
+	  		</ul>
+	  		</div>
+	  		</ul>	
+	  	{% else %}
+	  		<div>None</div>
+	  	{% endif %} 
+  	</div>
+  	{% endfor %}
+  	 
+   <!-- <div id="tab-0">
+    <p>Morbi tincidunt, dui sit amet facilisis feugiat, odio metus gravida ante, ut pharetra massa metus id nunc. Duis scelerisque molestie turpis. Sed fringilla, massa eget luctus malesuada, metus eros molestie lectus, ut tempus eros massa ut dolor. Aenean aliquet fringilla sem. Suspendisse sed ligula in ligula suscipit aliquam. Praesent in eros vestibulum mi adipiscing adipiscing. Morbi facilisis. Curabitur ornare consequat nunc. Aenean vel metus. Ut posuere viverra nulla. Aliquam erat volutpat. Pellentesque convallis. Maecenas feugiat, tellus pellentesque pretium posuere, felis lorem euismod felis, eu ornare leo nisi vel felis. Mauris consectetur tortor et purus.</p>
+  </div>
+  <div id="tab-1">
+    <p>Mauris eleifend est et turpis. Duis id erat. Suspendisse potenti. Aliquam vulputate, pede vel vehicula accumsan, mi neque rutrum erat, eu congue orci lorem eget lorem. Vestibulum non ante. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Fusce sodales. Quisque eu urna vel enim commodo pellentesque. Praesent eu risus hendrerit ligula tempus pretium. Curabitur lorem enim, pretium nec, feugiat nec, luctus a, lacus.</p>
+    <p>Duis cursus. Maecenas ligula eros, blandit nec, pharetra at, semper at, magna. Nullam ac lacus. Nulla facilisi. Praesent viverra justo vitae neque. Praesent blandit adipiscing velit. Suspendisse potenti. Donec mattis, pede vel pharetra blandit, magna ligula faucibus eros, id euismod lacus dolor eget odio. Nam scelerisque. Donec non libero sed nulla mattis commodo. Ut sagittis. Donec nisi lectus, feugiat porttitor, tempor ac, tempor vitae, pede. Aenean vehicula velit eu tellus interdum rutrum. Maecenas commodo. Pellentesque nec elit. Fusce in lacus. Vivamus a libero vitae lectus hendrerit hendrerit.</p>
+  </div>  -->
+</div>
+<input type="button" name="checkSubmit" value="送出" />
+</body>
+<script>
+function sheetAllCheck(obj,seq){
+	checkItems = $("#sheetPanel-"+seq).children("ul").children("li").children("input[name='checkItem']")
+	for (var i = 0;i < checkItems.length;i++){
+		checkItem = checkItems[i]
+		$(checkItem).prop("checked",true)
+	}
+}
+function sheetAllCancel(obj,seq){
+	checkItems = $("#sheetPanel-"+seq).children("ul").children("li").children("input[name='checkItem']")
+	for (var i = 0;i < checkItems.length;i++){
+		checkItem = checkItems[i]
+		$(checkItem).prop("checked",false)
+	}
+}
+
+$("[name='ItemDetail']").click(function(){
+	if($(this).val() == "詳細資料"){
+		$(this).siblings("table").show()
+		$(this).val("關閉詳細資料")
+	}else{
+		$(this).siblings("table").hide()
+		$(this).val("詳細資料")
+	}
+	
+});
+var shutdown = function(buildNumber){
+	$.ajax({url: "/shutdown",
+    		type: "POST",
+ 			data:JSON.stringify({}),
+ 			contentType: "application/json; charset=utf-8",
+ 			success: function(result){
+ 				window.location.href = "http://127.0.0.1:8080/job/IL_TEST_LOG/"+buildNumber+"/console"		
+			},
+			error:function(e){
+				console.log(e)
+				window.location.href = "http://127.0.0.1:8080/job/IL_TEST_LOG/"+buildNumber+"/console"
+			}	
+	});
+}
+var getBuildNumber = function(){
+	var buildNumber = ""
+	$.ajax({url: "/getBuildNumber",
+    	type: "POST",
+ 		data:JSON.stringify({}),
+ 		contentType: "application/json; charset=utf-8",
+ 		success: function(result){
+ 				buildNumber = result
+			}
+		}).done(function(){
+			shutdown(buildNumber)
+		});
+}
+$("[name='checkSubmit']").click(function(){
+	var sheet = {}
+	var sheetList = $("[name='sheet']")
+	for (var i = 0; i < sheetList.size();i++){
+		var sheetElement = sheetList[i];
+		//console.log($(sheetElement).html());
+		var sheetName = $(sheetElement).html();
+		var sheetContent = $("#tab-"+i)
+		var checkItemList = sheetContent.children("#sheetPanel-"+i).children("ul").children("li").children("input[name='checkItem']")
+		var dependList = sheetContent.children("#sheetPanel-"+i).children("ul").children("li").children("input[name='dependItem']")
+		var itemList = []
+		for (var j = 0;j<checkItemList.size();j++){
+			if (Boolean($(checkItemList[j]).prop("checked"))){
+				var obj = {}
+				obj.name = checkItemList[j].value
+				obj.step = j
+				obj.depend = dependList[j].value
+				console.log("this:"+obj.depend)
+				itemList[j] = obj
+				console.log(" checkItem:"+itemList[j])
+			}
+		}		
+		sheet[sheetName] = itemList
+	}
+	 $.ajax({url: "/save",
+	        type: "POST",
+		 	datatype:"json",
+		 	data:JSON.stringify({"sheet":sheet}),
+		 	contentType: "application/json; charset=utf-8",
+		 	success: function(result){
+		 		alert("儲存完成! 重導至建置頁面")
+		 		buildNumber = result
+		 		console.log("buildNumber:"+buildNumber)
+	    		},
+	    	error:function(error){
+	    		console.log(error)
+	    		alert("系統錯誤! 請聯絡系統管理員")
+	    		}
+		 	}).done(function(){
+	    	getBuildNumber()
+	})
+})
+
+$("[name='allCheck']").click(function(){
+  	for(var i = 0;i<$("[name='checkItem']").size();i++){
+  		$("[name='checkItem']").eq(i).prop("checked",true)  	
+  	}
+})
+$("[name='allCancel']").click(function(){
+  	for(var i = 0;i<$("[name='checkItem']").size();i++){
+  		$("[name='checkItem']").eq(i).prop("checked",false)  	
+  	}
+	
+  	
+})
+
+</script>
+</html>
